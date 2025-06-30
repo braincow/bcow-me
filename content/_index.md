@@ -35,6 +35,6 @@ At the moment my fancy is tickled mostly by anything GCP, Rust, Python or Go rel
 
 Currently I work at [Solita](https://www.solita.fi) as Lead Cloud Architect with Google Cloud Platform focus. My opinions are my own.
 
-You can also find me at IRCNet with nick @bcow.
+You can also find me at IRCNet with nick @bcow. And at Mastodon I am <a rel="me" href="https://mastodontti.fi/@bcow">@bcow@mastodontti.fi</a>.
 
 My GPG key is available [here](0x8983856FDCBAFD41.pub): 0x8983856FDCBAFD41.
