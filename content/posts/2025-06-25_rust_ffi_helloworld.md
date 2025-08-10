@@ -1,12 +1,13 @@
 +++
 title = "Let's learn about Rust C bindings and FFI"
 weight = 0
+updated = 2025-08-10
 
 [taxonomies]
 tags = ["rust", "C"]
 +++
 
-# Bridging worlds
+## Bridging worlds
 
 I have for a while now wondered about how Rust and C interoperate, not for any other reason than intrigue and trying to figure out how the damn thing works.
 
@@ -14,11 +15,11 @@ Therefore I ventured into the exciting world of the Foreign Function Interface, 
 
 Since I really did not know what the hell I was doing initially, I ended up using Gemini Code Assist to bridge the gaps, or chasms, in my knowledge during the excercise.
 
-## FFI
+### FFI
 
 In simple terms, the Foreign Function Interface (FFI) is a mechanism that allows code written in one programming language to call, and be called by code written, in another language. In the context of Rust, FFI is most commonly used to interoperate with C libraries. This is because C has a well-defined Application Binary Interface (ABI), which makes it a common denominator for interoperability between many languages.
 
-### Why is FFI a Big Deal?
+#### Why is FFI a Big Deal?
 
 Rust's FFI opens up a world of possibilities:
 
@@ -26,11 +27,11 @@ Rust's FFI opens up a world of possibilities:
 * **Performance-Critical Code:** While Rust is already incredibly fast, you might have a legacy C library that's highly optimized for a specific task. FFI allows you to call that library from your Rust code, getting the best of both worlds.
 * **Gradual Modernization:** FFI is perfect for gradually migrating a legacy codebase to Rust. You can start by rewriting small parts of your application in Rust and use FFI to bridge the old and new code.
 
-# A "Hello, World!" Example
+## A "Hello, World!" Example
 
 My "hello world" code is available in its entirety on [GitHub](https://github.com/braincow/rust_ffi_helloworld). While FFI interface in my understanding could also provide bi-directional function calls e.g. C-code could call a Rust function, in this excersise we only implement exposed C-functions to Rust code.
 
-## A C-library
+### A C-library
 
 First, we need a simple C-library and a function that the C-library will expose.
 
@@ -69,7 +70,7 @@ int hello(const char *name, char *out_buffer, size_t buffer_len)
 
 This function takes in a pointers for name and buffer to modify. Then with `sprintf` we construct a string "Hello Name" and push that into the buffer after which function returns with the number of bytes written, or -1 in case of an error. Pretty standard thread safe C-code stuff I think.
 
-## Rust "sys" crate
+### Rust "sys" crate
 
 In Rust we usually have a crate with suffix `-sys` that implements the FFI interface to C-code via bindings, in this case `hello-sys`. These bindings can be manually created I guess, but Rust also provides a `bindgen` crate that can automate this process.
 
@@ -159,7 +160,7 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 Now when the `hello-sys` crate is built it will contain very unsafe, generated, code and includes the compiled C-library that does not bring any benefits of Rust to the table yet. This is handled by creating a safer library crate as an interface between the developer, sys crate and C-code.
 
-## Rust crate
+### Rust crate
 
 Naming convention aside this crate now uses the `hello-sys` crate created earlier to implement via `unsafe {}` code user friendly function implementations towards our C-code. So instead of using the `bindgen` generated functions the developer uses more "safe" and vetted code from this `hello-rs` crate instead.
 
@@ -315,7 +316,7 @@ mod tests {
 
 There is approximately 2x more test code than actual implementation code for the Rust `hello` function. Writing `unsafe` code is only unsafe if you dont know what your code is doing or you dont care enough to validate your assumptions. But since we can only write test cases for situations that we are aware of no test suite is never perfect and this is how we get the blue screens, core dumps and sad Macs from time to time. When this happens fixes are applied and test cases written to cover that error state and to safeguard against future regressions.
 
-### Bonus: Fuzzing
+## Bonus: Fuzzing
 
 To over simplify what fuzzing is to say that its a technique of sequentially feeding garbage to a datastructure that is processed in someway or another in hopes of getting a crash and then analyzing the error state, creating a fix and test case for it.
 
@@ -341,7 +342,7 @@ fuzz_target!(|data: &[u8]| {
 
 This simple fuzzer _should_, to my understanding, catch a situation where some user input to the Rust `hello` function that calls `hello` in the sys crate that binds to C-library function called `hello` causes a panic or a crash we become aware of it. I left the implementation running for few days and was unable to get a crash out of my code; I guess its relative good then or my fuzzing target is just broken or I got lucky with the generated data not triggering an error.
 
-# Conclusion
+## Conclusion
 
 I think I now understand the FFI interface on a superficial level and can create a more complex real life example next or at the very least am able to debug existing crates a little better. Also I need to check if I can use this approach in emdedded development too; I have camera module that I would like to use from Raspberry Pi Pico W, but they only provide C-library for interfacing with the module and so far manually initializing and using it from `embassy-rs` environment has been a tricky proposition.
 
