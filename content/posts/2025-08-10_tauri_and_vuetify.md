@@ -1,6 +1,7 @@
 +++
 title = "Tauri and Vuetify a shotgun wedding for cross environment GUI in Rust"
 weight = 0
+updated = 2025-08-11
 
 [taxonomies]
 tags = ["rust", "vue", "vuetify", "typescript", "tauri"]
@@ -54,4 +55,4 @@ This is where the pragmatic union of Tauri and Vuetify shines. It's a powerful c
 
 This approach is not just a compromise,  it is a strategic choice. It empowers developers to build robust, feature-rich, cross-platform desktop applications *now*, without sacrificing the performance and safety guarantees of Rust at their core. While we look forward to the day a dominant native Rust GUI framework emerges, the combination of Tauri and Vuetify offers a genuinely excellent and productive path forward.
 
-In the next part of the series, I plan to demonstrate how easy it is to bootstrap an application, run it, and understand how these two technologies work together in practice.
+In [the next part of the series](@/posts/2025-08-11_tauri_and_vuetify_helloworld/index.md), I plan to demonstrate how easy it is to bootstrap an application, run it, and understand how these two technologies work together in practice.
