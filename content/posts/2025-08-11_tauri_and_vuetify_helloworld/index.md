@@ -1,7 +1,6 @@
 +++
 title = "Tauri and Vuetify want to say Hello, World!"
 weight = 0
-draft = true
 
 [taxonomies]
 tags = ["rust", "vue", "vuetify", "typescript", "tauri", "Android"]
