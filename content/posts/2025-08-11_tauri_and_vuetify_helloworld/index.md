@@ -27,13 +27,13 @@ And lets add Tauri to the build process while were at it and initialize the Rust
 
 ![Add Tauri](add_tauri_dependency.png "Add Tauri dependencies to your Vuetify application")
 
+![Initialize Tauri](initialize_tauri.png "Initialize Tauri Rust application as part of your Vuetify project")
+
 Some parts of the Tauri tooling do require some additional configuration here, there and in the Vite configuration which are not strictly necessary at this stage.
 
 Also things like the `@tauri-apps/api` npm library is not added to the your `package.json`, but these can also be solved later when necessary.
 
 Additionally it is recommended to check the recommendations for other steps in the Tauri's quick start guide that explains these changes in greater detail. But even without these modifications an "Hello, World" example can be achieved.
-
-![Initialize Tauri](initialize_tauri.png "Initialize Tauri Rust application as part of your Vuetify project")
 
 ### Launch the Hello, World
 
