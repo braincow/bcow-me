@@ -1,10 +1,10 @@
 +++
 title = "Artemis program and the moon"
 weight = 0
-updated = 2026-04-02
+updated = 2026-04-21
 
 [taxonomies]
-tags = ["space", "nasa", "artemis", "moon", "apollo", "technology"]
+tags = ["space", "nasa", "artemis", "moon", "apollo", "technology", "opinion"]
 +++
 
 ## Why go to the moon?
