@@ -25,7 +25,7 @@ To install `ykman` use `rpm-ostree install yubikey-manager` if not yet available
 
 ## Enable FIDO2 on the LUKS partition
 
-Now since we have all that we need lets modify the system.
+Now since we have all that we can modify the system.
 
 Check with `lsblk` the hardware partition hosting the LUKS container and take a note of its dev path as we will need it next. I will use as the placeholder my systems path, yours might be different so do not copy & paste.
 
