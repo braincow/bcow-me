@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  
+  
+    
+  
+  <meta name="description" content="Antti&#x27;s ramblings about life, the universe and everything else">
+
+  <title>Protecting Fedora Atomic login with PAM and FIDO2</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://www.bcow.me/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://www.bcow.me/img/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.bcow.me/img/apple-touch-icon.png">
+  
+  <style>
+
+  /* light mode colors */
+  body {
+    --primary-color: #5871a2;
+    --primary-pale-color: #5871a233;
+    --primary-decoration-color: #5871a210;
+    --bg-color: #ffffff;
+    --text-color: #2f3030;
+    --text-pale-color: #767676;
+    --text-decoration-color: #a9a9a9;
+    --highlight-mark-color: #5f75b020;
+
+    --callout-note-color: #5871a2;
+    --callout-tip-color: #268556;
+    --callout-important-color: #885fc9;
+    --callout-warning-color: #ab6632;
+    --callout-caution-color: #c64e4e;
+  }
+
+  /* dark mode colors */
+  body.dark {
+    --primary-color: #6f8fd1;
+    --primary-pale-color: #6f8fd166;
+    --primary-decoration-color: #6f8fd112;
+    --bg-color: #1c1c1c;
+    --text-color: #c1c1c1;
+    --text-pale-color: #848484;
+    --text-decoration-color: #5f5f5f;
+    --highlight-mark-color: #8296cb3b;
+
+    --callout-note-color: #6f8fd1;
+    --callout-tip-color: #47976f;
+    --callout-important-color: #9776cd;
+    --callout-warning-color: #ad7a52;
+    --callout-caution-color: #d06161;
+  }
+
+  /* typography */
+  body {
+    --main-font: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --code-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --homepage-max-width: 768px;
+    --main-max-width: 768px;
+    --avatar-size: 60px;
+    --font-size: 16px;
+    --line-height: 1.75;
+    --img-border-radius: 0px;
+    --detail-border-radius: 0px;
+    --dark-mode-img-brightness: 0.75;
+    --dark-mode-chart-brightness: 0.75;
+    --inline-code-border-radius: 2px;
+    --inline-code-bg-color: var(--primary-decoration-color);
+    --block-code-border-radius: 0px;
+    --block-code-border-color: var(--primary-color);
+    --detail-border-color: var(--primary-color);
+  }
+
+</style>
+
+  <link rel="stylesheet" href="https://www.bcow.me/main.css">
+  
+
+<link id="hl" rel="stylesheet" type="text/css" href="/giallo-light.css" />
+
+
+
+  <script data-goatcounter="https://bcow.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+
+<body class="post">
+  
+  <script>
+    const theme = sessionStorage.getItem('theme');
+    const match = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if ((theme && theme == 'dark') || (!theme && match)) {
+      document.body.classList.add('dark');
+      const hl = document.querySelector('link#hl');
+      if (hl) hl.href = 'https://www.bcow.me/giallo-dark.css';
+    }
+  </script>
+  
+  
+<div id="wrapper">
+  <div id="blank"></div>
+  <aside>
+    
+    
+    <nav>
+      <ul>
+        
+        <li>
+          <a class="h2" href="#protecting-fedora-logins-with-fido2">Protecting Fedora logins with FIDO2</a>
+          
+          <ul>
+            
+            <li>
+              <a class="h3" href="#install-necessary-software">Install necessary software</a>
+            </li>
+            
+            <li>
+              <a class="h3" href="#create-a-challenge">Create a challenge</a>
+            </li>
+            
+            <li>
+              <a class="h3" href="#enable-fido2-pam-module">Enable FIDO2 PAM module</a>
+            </li>
+            
+            <li>
+              <a class="h3" href="#finalizing">Finalizing</a>
+            </li>
+            
+          </ul>
+          
+        </li>
+        
+      </ul>
+    </nav>
+    
+    
+    <button id="back-to-top" aria-label="back to top">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-up"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+
+    </button>
+    
+  </aside>
+  <main>
+    
+<header>
+  <nav>
+    <a id="back-link" href="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts">← Back</a>
+  </nav>
+</header>
+
+
+    <div>
+      
+      
+      
+      
+      <div id="copy-cfg" style="display: none;" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+"></div>
+      
+      <article class="prose">
+        <h1>Protecting Fedora Atomic login with PAM and FIDO2</h1>
+        <div id="post-info">
+          <div id="date">
+            <span id="publish">Jul 13, 2026</span>
+            <span>Updated on <span id="updated">Jul 14, 2026</span></span>
+            </div>
+
+          
+          <div id="tags">
+            <a class="instant" href="https://www.bcow.me/tags/linux"><span>#</span>linux</a><a class="instant" href="https://www.bcow.me/tags/pam"><span>#</span>pam</a><a class="instant" href="https://www.bcow.me/tags/yubikey"><span>#</span>yubikey</a><a class="instant" href="https://www.bcow.me/tags/security"><span>#</span>security</a><a class="instant" href="https://www.bcow.me/tags/cryptography"><span>#</span>cryptography</a><a class="instant" href="https://www.bcow.me/tags/fedora"><span>#</span>fedora</a><a class="instant" href="https://www.bcow.me/tags/atomic"><span>#</span>atomic</a><a class="instant" href="https://www.bcow.me/tags/fido2"><span>#</span>fido2</a>
+          </div>
+          
+        </div>
+
+        
+        
+
+        
+
+        <h2 id="protecting-fedora-logins-with-fido2">Protecting Fedora logins with FIDO2<a class="zola-anchor" href="#protecting-fedora-logins-with-fido2" aria-label="Anchor link for: protecting-fedora-logins-with-fido2" style="visibility: hidden;"></a>
+</h2>
+<p>As we previously setup our Yubikey with FIDO2 and PIN protection for the challenge there to be used for opening the <a href="https://www.bcow.me/posts/yubikey-luks-fedora/">systems LUKS partition</a> lets protect our user account with it as well.</p>
+<p>Here I shall also instruct on how to setup this on Fedora Atomic spin, but replacing all rpm-ostree commands with dnf commands should do the trick mostly for a standard Fedora Linux.</p>
+<h3 id="install-necessary-software">Install necessary software<a class="zola-anchor" href="#install-necessary-software" aria-label="Anchor link for: install-necessary-software" style="visibility: hidden;"></a>
+</h3>
+<p>There are two ways to get our Yubikey working with PAM in Fedora. <code>pam_yubico</code> and <code>pam-u2f</code>. The former requires an internet connection to verify the token from Yubikey cloud which might not always be available for a laptop so I opted to use the u2f PAM module instead.</p>
+<p>To layer in all our required depedencies install them and do an system reboot.</p>
+<pre class="giallo z-code"><code data-lang="shellscript"><span class="giallo-l"><span class="z-entity z-name">rpm-ostree</span><span class="z-string"> install</span><span class="z-string"> pam-u2f</span><span class="z-string"> fido2-tools</span><span class="z-string"> pamu2fcfg</span></span>
+<span class="giallo-l"><span class="z-entity z-name">systemctl</span><span class="z-string"> reboot</span></span></code></pre>
+<p>Do not do a live apply here as the pam modules and their configurations are "fragile" in a sense that since we modify files in <code>/etc</code> you might lock yourself out if not all is present fully under all circuimstances.</p>
+<h3 id="create-a-challenge">Create a challenge<a class="zola-anchor" href="#create-a-challenge" aria-label="Anchor link for: create-a-challenge" style="visibility: hidden;"></a>
+</h3>
+<p>The pam module will look into certain path on users home folder for the FIDO2 challenge. First we need to create that path and populate the file</p>
+<pre class="giallo z-code"><code data-lang="shellscript"><span class="giallo-l"><span class="z-entity z-name">mkdir</span><span class="z-constant"> -</span><span class="z-constant">p</span><span class="z-string"> ~/.config/Yubico/</span></span>
+<span class="giallo-l"><span class="z-entity z-name">pamu2fcfg</span><span class="z-constant"> -</span><span class="z-constant">-pin-verification</span><span class="z-keyword"> &gt;</span><span class="z-string"> ~/.config/Yubico/u2f_keys</span></span></code></pre>
+<p>If you plan to remove password from your user account completely it is recommended that you add another Yubikey token as a backup here. If you primary one gets lost or damaged you might end up locking yourself out of your system.</p>
+<pre class="giallo z-code"><code data-lang="shellscript"><span class="giallo-l"><span class="z-entity z-name">pamu2fcfg</span><span class="z-constant"> -</span><span class="z-constant">-nouser</span><span class="z-keyword"> &gt;&gt;</span><span class="z-string"> ~/.config/Yubico/u2f_keys</span></span></code></pre>
+<p>Note: be sure to append via <code>&gt;&gt;</code> pipe to the file instead of overwriting it with <code>&gt;</code> and losing your primary challenge.</p>
+<h3 id="enable-fido2-pam-module">Enable FIDO2 PAM module<a class="zola-anchor" href="#enable-fido2-pam-module" aria-label="Anchor link for: enable-fido2-pam-module" style="visibility: hidden;"></a>
+</h3>
+<p>After the challenge is in place and all required software is installed it is time to enable the configuration.</p>
+<pre class="giallo z-code"><code data-lang="shellscript"><span class="giallo-l"><span class="z-entity z-name">sudo</span><span class="z-string"> authselect</span><span class="z-string"> enable-feature</span><span class="z-string"> with-pam-u2f</span></span></code></pre><h4 id="test-it">Test it<a class="zola-anchor" href="#test-it" aria-label="Anchor link for: test-it" style="visibility: hidden;"></a>
+</h4>
+<p>Open a new terminal and issue <code>sudo -k</code> to invalidate any possible currently open sudo session and then test with <code>sudo true</code>. If the configuration is working as expected and you have your Yubikey inserted the system should prompt you for the PIN and then to touch the key.</p>
+<p>If the key is not present the system will fallback to password authentication.</p>
+<h3 id="finalizing">Finalizing<a class="zola-anchor" href="#finalizing" aria-label="Anchor link for: finalizing" style="visibility: hidden;"></a>
+</h3>
+<p>Instead of removing a password completely from your user I recommend instead that you change the password to something really long and complex that you keep on a notepad or in a password manager. Use the password only in emergencies (e.g. lost or damaged Yubikey).</p>
+
+      </article>
+
+      
+      
+
+      
+      
+    </div>
+
+    
+
+
+<footer>
+  <div class="left">
+    <div class="copyright">
+      © 2025 Antti Peltonen
+      
+      <span>|</span>
+      Built with <a href="https://www.getzola.org" rel="noreferrer" target="_blank">zola</a> and <a href="https://github.com/isunjn/serene" rel="noreferrer" target="_blank">serene</a>
+      
+    </div>
+  </div>
+
+  <div class="right">
+    
+    
+      
+    
+    
+    <a id="rss-btn" href="https://www.bcow.me/posts/atom.xml">RSS</a>
+    
+    
+
+    
+    
+    
+    <button id="theme-toggle" aria-label="theme switch">
+      <span class="moon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27098 10 5.04157 10 7ZM4 12C4 16.4183 7.58172 20 12 20C15.0583 20 17.7158 18.2839 19.062 15.7621C18.3945 15.9187 17.7035 16 17 16C12.0294 16 8 11.9706 8 7C8 6.29648 8.08133 5.60547 8.2379 4.938C5.71611 6.28423 4 8.9417 4 12Z" fill="currentColor"></path></svg>
+</span>
+      <span class="sun-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z" fill="currentColor"></path></svg>
+</span>
+    </button>
+    
+  </div>
+</footer>
+
+
+
+
+<dialog id="rss-mask">
+  <div>
+    <a href="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml">https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml</a>
+    
+    
+    <button autofocus aria-label="copy" data-link="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z" fill="currentColor"></path></svg>
+
+    </button>
+  </div>
+</dialog>
+
+
+
+  </main>
+</div>
+
+  
+<script src="/js/lightense.min.js"></script>
+
+
+  <script src="https://www.bcow.me/js/main.js"></script>
+</body>
+
+</html>

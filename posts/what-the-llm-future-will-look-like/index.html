@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  
+  
+    
+  
+  <meta name="description" content="Antti&#x27;s ramblings about life, the universe and everything else">
+
+  <title>What the LLM future will look like?</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://www.bcow.me/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://www.bcow.me/img/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.bcow.me/img/apple-touch-icon.png">
+  
+  <style>
+
+  /* light mode colors */
+  body {
+    --primary-color: #5871a2;
+    --primary-pale-color: #5871a233;
+    --primary-decoration-color: #5871a210;
+    --bg-color: #ffffff;
+    --text-color: #2f3030;
+    --text-pale-color: #767676;
+    --text-decoration-color: #a9a9a9;
+    --highlight-mark-color: #5f75b020;
+
+    --callout-note-color: #5871a2;
+    --callout-tip-color: #268556;
+    --callout-important-color: #885fc9;
+    --callout-warning-color: #ab6632;
+    --callout-caution-color: #c64e4e;
+  }
+
+  /* dark mode colors */
+  body.dark {
+    --primary-color: #6f8fd1;
+    --primary-pale-color: #6f8fd166;
+    --primary-decoration-color: #6f8fd112;
+    --bg-color: #1c1c1c;
+    --text-color: #c1c1c1;
+    --text-pale-color: #848484;
+    --text-decoration-color: #5f5f5f;
+    --highlight-mark-color: #8296cb3b;
+
+    --callout-note-color: #6f8fd1;
+    --callout-tip-color: #47976f;
+    --callout-important-color: #9776cd;
+    --callout-warning-color: #ad7a52;
+    --callout-caution-color: #d06161;
+  }
+
+  /* typography */
+  body {
+    --main-font: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --code-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --homepage-max-width: 768px;
+    --main-max-width: 768px;
+    --avatar-size: 60px;
+    --font-size: 16px;
+    --line-height: 1.75;
+    --img-border-radius: 0px;
+    --detail-border-radius: 0px;
+    --dark-mode-img-brightness: 0.75;
+    --dark-mode-chart-brightness: 0.75;
+    --inline-code-border-radius: 2px;
+    --inline-code-bg-color: var(--primary-decoration-color);
+    --block-code-border-radius: 0px;
+    --block-code-border-color: var(--primary-color);
+    --detail-border-color: var(--primary-color);
+  }
+
+</style>
+
+  <link rel="stylesheet" href="https://www.bcow.me/main.css">
+  
+
+<link id="hl" rel="stylesheet" type="text/css" href="/giallo-light.css" />
+
+
+
+  <script data-goatcounter="https://bcow.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+
+<body class="post">
+  
+  <script>
+    const theme = sessionStorage.getItem('theme');
+    const match = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if ((theme && theme == 'dark') || (!theme && match)) {
+      document.body.classList.add('dark');
+      const hl = document.querySelector('link#hl');
+      if (hl) hl.href = 'https://www.bcow.me/giallo-dark.css';
+    }
+  </script>
+  
+  
+<div id="wrapper">
+  <div id="blank"></div>
+  <aside>
+    
+    
+    <nav>
+      <ul>
+        
+        <li>
+          <a class="h2" href="#artificial-intelligence-it-is-not">Artificial intelligence it is not</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#current-hell-scape">Current hell scape</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#burst">Burst</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#what-comes-after">What comes after?</a>
+          
+        </li>
+        
+      </ul>
+    </nav>
+    
+    
+    <button id="back-to-top" aria-label="back to top">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-up"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+
+    </button>
+    
+  </aside>
+  <main>
+    
+<header>
+  <nav>
+    <a id="back-link" href="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts">← Back</a>
+  </nav>
+</header>
+
+
+    <div>
+      
+      
+      
+      
+      <div id="copy-cfg" style="display: none;" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+"></div>
+      
+      <article class="prose">
+        <h1>What the LLM future will look like?</h1>
+        <div id="post-info">
+          <div id="date">
+            <span id="publish">Apr 21, 2026</span>
+            </div>
+
+          
+          <div id="tags">
+            <a class="instant" href="https://www.bcow.me/tags/llm"><span>#</span>llm</a><a class="instant" href="https://www.bcow.me/tags/ai"><span>#</span>ai</a><a class="instant" href="https://www.bcow.me/tags/technology"><span>#</span>technology</a><a class="instant" href="https://www.bcow.me/tags/opinion"><span>#</span>opinion</a>
+          </div>
+          
+        </div>
+
+        
+        
+
+        
+
+        <h2 id="artificial-intelligence-it-is-not">Artificial intelligence it is not<a class="zola-anchor" href="#artificial-intelligence-it-is-not" aria-label="Anchor link for: artificial-intelligence-it-is-not" style="visibility: hidden;"></a>
+</h2>
+<p>Lets get the obvious thing out of the way: No, its not intelligent. AI as we currently know it is a next word guessing algorithm. More context just makes more educated guesses based on some randomness and larger pool of words to guess from based on how often they appear in conjunction with already previously guessed words. The more context and the larger model (more trained words aka better next guesses) just eat more cpu, gpu and memory resources globally while prompted, but there is a cost associated for training these new models too.</p>
+<p>AI can produce excellent language and be VERY convincing in its output, but looking more closer at it - it becomes clear that it is just theater performance for us. Back in the 80 you could get the same excitement from talking to an Eliza bot. Eliza was distributed at the back of magazine as BASIC code listing that you meticulously typed into your Commodore 64 BASIC prompt. Eliza too was very convincing at times too although it was a much simpler illusion than the current LLMs perform for us. Its algorithm also had nothing to do with current LLMs though, but the outcome was the same. And we as a species are also a really gullible bunch of monkeys making this possible - we believe the illusion so easily. Even a simpler bot than Eliza that I wrote back in the day that sat on IRC channels and just randomly insulted people or their Internet provider based on the users identity string was able to fool channels worth of people for hours and in the end get banned - not for being a bot, but because it was rude, obnoxious and generally toxic conversationalist.</p>
+<p>So the intelligence is relative term here. More than anything we are willing to accept it as intelligence what LLM models output for our eyes to see which tells us more about ourselves than about the artificial intelligence models we use.</p>
+<h2 id="current-hell-scape">Current hell scape<a class="zola-anchor" href="#current-hell-scape" aria-label="Anchor link for: current-hell-scape" style="visibility: hidden;"></a>
+</h2>
+<p>Startups. Venture capital. Hype. Faster news cycle with nonsensical updates on things that actually don't matter at all, but seem so relevant currently regardless.</p>
+<p>Now where have I heard and seen this before? We are quickly replicating the conditions we had back in the early 00s and -07 with dot com bubble and the financial crisis. There  is a bubble now too which you can see with your own eyes and feel as that growing anxiety in the back of your mind that you cant quite express  what it is all about. Its about mass hysteria. Thats what it is all about.</p>
+<p>We are collectively under the illusion that something HUGE and TRANSFORMATIVE is going on. No its not. What we actually are seeing is a hype cycle feeding a bubble and, thank god, its starting show signs of finally dying off.</p>
+<p>NVIDIA sells nonexistent chips to OpenAI with money that does not exist into datacenters that have not yet been built and Microsoft buys models and "knowhow" from OpenAI for money they dont have. Everything is an illusion - money doubly so. When you see a news head line that states there is going to be a such and such deal with so much more billions it is important to remember that the billions dont actually exist as money - they are promises and intents of money. And when you pump non-existent currency into non-existent product well that is the definition of a bubble. Same happens with Google and others too, but maybe in a more less transparent way as Alphabet builds their own chips with their own money and does the research &amp; development and products with their own money, but dont be mistaken the non-existent money flows there as well between columns of an accounting software somewhere. Google Cloud Next 2026 is right behind the corner and the AI this and AI that hype seems to override any actual value propositions in that conference program as well. Oh, I am a Google Cloud guy and think their tech is excellent, even best on the market, but still I consider this AI centric hype being a dangerous distraction. We have already seen this where API keys (that previously were not secrets) can suddenly be used by "hackers" to exploit Vertex AI if your API keys are not properly scoped; Which they were not as they were not previously considered to be secrets!</p>
+<p>We are also training new models still with the same methods we did just few years back. Take in the overall "knowledge" of man kind in the Internet and feed that to the models prediction algorithm so that it can extrapolate the next possible word or piece of information that goes towards result of the users prompt. Now this model is broken. The Internet is filled with AI generated slop that gets feed into the models during training and we are starting to see the models degrade in quality while simultaneously gaining diminishing returns on what it cost to get the result from these models.</p>
+<p>The fundamental issue of LLMs models has been hallucinations aka when the model does not have the information readily available or the context does not "allow" retrieval of the information it has due to that word having a smaller predictive score. This creates dangerous situations where models tell the users to eat soap or attempt suicide or do other completely idiotic things, but since they are very convincing in their verbal output and are usually polite while instructing the users we gullible monkeys do what we are told to our own peril. Even if the hallucination is not dangerous but obviously wrong in factual content then if that generated output is then published back to the Internet and then retrained back into some model we get even more chance for that wrong information to be retrieved next time by the model and returned as an answer to the user when prompted.</p>
+<p>This is not a problem of adoption like a model would tell you; We are adopting alright. We have adopted so much AI capabilities into products where they are useful and even more so on products that have no place for AI assisted features. Since the adoption is so large this has created a problem to regulators. Where is the data stored? Does it contain personally identifiable information? Should there be some antitrust measures in place to protect consumers from big tech? What are the private security and corporate security implications of this technology? These things are still being debated and everyone is in a such a hurry to adopt that the risks are not properly evaluated.</p>
+<h2 id="burst">Burst<a class="zola-anchor" href="#burst" aria-label="Anchor link for: burst" style="visibility: hidden;"></a>
+</h2>
+<p>This situation is going to get worse before it gets better. Already Microsoft has started to refuse paying for OpenAIs nonsense and Alphabet had to go to the banks to get some capital in addition to their own deep pockets.</p>
+<p>Also since USA is conducting an illegal war at Iran right now which has on its own increased inflation and energy costs in overall it has also disrupted the crucial supply of helium that is used in semiconductor manufacturing. This will also increase the price of datacenters and servers running AI models indirectly. Even before this latest hit the business model was not sustainable and now it is even less so.</p>
+<p>The signs are there if you know how to read them. Token limitations have gone into effect on many services. Startups dont get money anymore by just pitching "AI enabled" keyword. Github Copilot has stopped temporarily on-boarding new customers. Google Gemini payed subscriptions for consumers have started to increase in price and gpus have ran out of some cloud provider datacenters preventing software companies from creating their own AI enabled features.</p>
+<p>So the bubble is going to burst. If you allow me to play Nostradamus here I say it will happen on Q4 of 2026 or Q1 of 2027, but lets see. It will start from freezing or cancellation of AI infrastructure investments aka new datacenters and servers for running said models. When this happens the markets will recalibrate and the bubble bursts. Suddenly the value of non-existent services and goods disappear from the economy overnight, but the loans still have to be payed in full. There are going to be bankruptcies, mergers, layoffs and shutdowns of product lines - physical and electronic.</p>
+<h2 id="what-comes-after">What comes after?<a class="zola-anchor" href="#what-comes-after" aria-label="Anchor link for: what-comes-after" style="visibility: hidden;"></a>
+</h2>
+<p>While I still have the Nostradamus cloak on let me continue a bit more. After the bubble bursts do we return to the time before LLM and ChatGPT2.5?</p>
+<p>Yes and no.</p>
+<p>No because LLMs are useful tools in certain scenarios that has been proven, but will use them differently. Yes because not everyone can afford the use them like we currently do.</p>
+<p>LLMs will move to on our phones and other end point devices like laptops, but what we will be running are more restricted models like Gemma or Mistral. These endpoint models will then connect to more advanced, purpose built, high-powered models over MCP protocol that are running in the cloud and we will pay for the cpu, gpu and memory used based on a "hourly rate". So suddenly feeding your entire program code as context to ask the model to move your button three pixels to the right is no longer a viable prompt for a developer. Local models also solve the sovereignty and data security issues we currently have. As we control the model runtimes and can dictate where they are stored in, what gets stored in them and where any processing or data storage in general takes place we can enforce same security frameworks on them as we currently do on software on our phones or corporate endpoint devices such as laptops.</p>
+<p>As LLM models become expensive to prompt at market prices this means that the professions that we "lost" to the hype will get their jobs back because nothing beats the good old human brain and a human computer interface known as the keyboard and mouse - and or a stylus.</p>
+<p>LLMs will in the end fulfill the promise that we were sold during all this hype: it will increase productivity, but without all the nonsense and the tooling is priced according to its usefulness and how much it actually costs to use.</p>
+<p>Im tired. I just want this hype to die down so that we can start the cycle again with the next thing - what ever that might be. I just hope that it will be something which does not affect my professional landscape so that I can look out of the window and not see everything on fire and just wonder to myself "why are those people in panic and running around in circles while cursing out loud?". Ignorance is a bliss.</p>
+
+      </article>
+
+      
+      
+
+      
+      
+    </div>
+
+    
+
+
+<footer>
+  <div class="left">
+    <div class="copyright">
+      © 2025 Antti Peltonen
+      
+      <span>|</span>
+      Built with <a href="https://www.getzola.org" rel="noreferrer" target="_blank">zola</a> and <a href="https://github.com/isunjn/serene" rel="noreferrer" target="_blank">serene</a>
+      
+    </div>
+  </div>
+
+  <div class="right">
+    
+    
+      
+    
+    
+    <a id="rss-btn" href="https://www.bcow.me/posts/atom.xml">RSS</a>
+    
+    
+
+    
+    
+    
+    <button id="theme-toggle" aria-label="theme switch">
+      <span class="moon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27098 10 5.04157 10 7ZM4 12C4 16.4183 7.58172 20 12 20C15.0583 20 17.7158 18.2839 19.062 15.7621C18.3945 15.9187 17.7035 16 17 16C12.0294 16 8 11.9706 8 7C8 6.29648 8.08133 5.60547 8.2379 4.938C5.71611 6.28423 4 8.9417 4 12Z" fill="currentColor"></path></svg>
+</span>
+      <span class="sun-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z" fill="currentColor"></path></svg>
+</span>
+    </button>
+    
+  </div>
+</footer>
+
+
+
+
+<dialog id="rss-mask">
+  <div>
+    <a href="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml">https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml</a>
+    
+    
+    <button autofocus aria-label="copy" data-link="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z" fill="currentColor"></path></svg>
+
+    </button>
+  </div>
+</dialog>
+
+
+
+  </main>
+</div>
+
+  
+<script src="/js/lightense.min.js"></script>
+
+
+  <script src="https://www.bcow.me/js/main.js"></script>
+</body>
+
+</html>

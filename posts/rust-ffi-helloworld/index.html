@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  
+  
+    
+  
+  <meta name="description" content="Antti&#x27;s ramblings about life, the universe and everything else">
+
+  <title>Let&#x27;s learn about Rust C bindings and FFI</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://www.bcow.me/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://www.bcow.me/img/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.bcow.me/img/apple-touch-icon.png">
+  
+  <style>
+
+  /* light mode colors */
+  body {
+    --primary-color: #5871a2;
+    --primary-pale-color: #5871a233;
+    --primary-decoration-color: #5871a210;
+    --bg-color: #ffffff;
+    --text-color: #2f3030;
+    --text-pale-color: #767676;
+    --text-decoration-color: #a9a9a9;
+    --highlight-mark-color: #5f75b020;
+
+    --callout-note-color: #5871a2;
+    --callout-tip-color: #268556;
+    --callout-important-color: #885fc9;
+    --callout-warning-color: #ab6632;
+    --callout-caution-color: #c64e4e;
+  }
+
+  /* dark mode colors */
+  body.dark {
+    --primary-color: #6f8fd1;
+    --primary-pale-color: #6f8fd166;
+    --primary-decoration-color: #6f8fd112;
+    --bg-color: #1c1c1c;
+    --text-color: #c1c1c1;
+    --text-pale-color: #848484;
+    --text-decoration-color: #5f5f5f;
+    --highlight-mark-color: #8296cb3b;
+
+    --callout-note-color: #6f8fd1;
+    --callout-tip-color: #47976f;
+    --callout-important-color: #9776cd;
+    --callout-warning-color: #ad7a52;
+    --callout-caution-color: #d06161;
+  }
+
+  /* typography */
+  body {
+    --main-font: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --code-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --homepage-max-width: 768px;
+    --main-max-width: 768px;
+    --avatar-size: 60px;
+    --font-size: 16px;
+    --line-height: 1.75;
+    --img-border-radius: 0px;
+    --detail-border-radius: 0px;
+    --dark-mode-img-brightness: 0.75;
+    --dark-mode-chart-brightness: 0.75;
+    --inline-code-border-radius: 2px;
+    --inline-code-bg-color: var(--primary-decoration-color);
+    --block-code-border-radius: 0px;
+    --block-code-border-color: var(--primary-color);
+    --detail-border-color: var(--primary-color);
+  }
+
+</style>
+
+  <link rel="stylesheet" href="https://www.bcow.me/main.css">
+  
+
+<link id="hl" rel="stylesheet" type="text/css" href="/giallo-light.css" />
+
+
+
+  <script data-goatcounter="https://bcow.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+
+<body class="post">
+  
+  <script>
+    const theme = sessionStorage.getItem('theme');
+    const match = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if ((theme && theme == 'dark') || (!theme && match)) {
+      document.body.classList.add('dark');
+      const hl = document.querySelector('link#hl');
+      if (hl) hl.href = 'https://www.bcow.me/giallo-dark.css';
+    }
+  </script>
+  
+  
+<div id="wrapper">
+  <div id="blank"></div>
+  <aside>
+    
+    
+    <nav>
+      <ul>
+        
+        <li>
+          <a class="h2" href="#bridging-worlds">Bridging worlds</a>
+          
+          <ul>
+            
+            <li>
+              <a class="h3" href="#ffi">FFI</a>
+            </li>
+            
+          </ul>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#a-hello-world-example">A &quot;Hello, World!&quot; Example</a>
+          
+          <ul>
+            
+            <li>
+              <a class="h3" href="#a-c-library">A C-library</a>
+            </li>
+            
+            <li>
+              <a class="h3" href="#rust-sys-crate">Rust &quot;sys&quot; crate</a>
+            </li>
+            
+            <li>
+              <a class="h3" href="#rust-crate">Rust crate</a>
+            </li>
+            
+          </ul>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#bonus-fuzzing">Bonus: Fuzzing</a>
+          
+        </li>
+        
+        <li>
+          <a class="h2" href="#conclusion">Conclusion</a>
+          
+        </li>
+        
+      </ul>
+    </nav>
+    
+    
+    <button id="back-to-top" aria-label="back to top">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-up"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+
+    </button>
+    
+  </aside>
+  <main>
+    
+<header>
+  <nav>
+    <a id="back-link" href="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts">← Back</a>
+  </nav>
+</header>
+
+
+    <div>
+      
+      
+      
+      
+      <div id="copy-cfg" style="display: none;" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+"></div>
+      
+      <article class="prose">
+        <h1>Let&#x27;s learn about Rust C bindings and FFI</h1>
+        <div id="post-info">
+          <div id="date">
+            <span id="publish">Jun 25, 2025</span>
+            <span>Updated on <span id="updated">Aug 10, 2025</span></span>
+            </div>
+
+          
+          <div id="tags">
+            <a class="instant" href="https://www.bcow.me/tags/rust"><span>#</span>rust</a><a class="instant" href="https://www.bcow.me/tags/c"><span>#</span>C</a>
+          </div>
+          
+        </div>
+
+        
+        
+
+        
+
+        <h2 id="bridging-worlds">Bridging worlds<a class="zola-anchor" href="#bridging-worlds" aria-label="Anchor link for: bridging-worlds" style="visibility: hidden;"></a>
+</h2>
+<p>I have for a while now wondered about how Rust and C interoperate, not for any other reason than intrigue and trying to figure out how the damn thing works.</p>
+<p>Therefore I ventured into the exciting world of the Foreign Function Interface, or FFI. It's a powerful feature that allows Rust to communicate with other programming languages, and a great way to understand this is to write an interface yourself. And so I did. I will be deconstructing the work I did over midsummer this year, creating a simple C-library for "Hello, World!" messages and then writing Rust bindings for it.</p>
+<p>Since I really did not know what the hell I was doing initially, I ended up using Gemini Code Assist to bridge the gaps, or chasms, in my knowledge during the excercise.</p>
+<h3 id="ffi">FFI<a class="zola-anchor" href="#ffi" aria-label="Anchor link for: ffi" style="visibility: hidden;"></a>
+</h3>
+<p>In simple terms, the Foreign Function Interface (FFI) is a mechanism that allows code written in one programming language to call, and be called by code written, in another language. In the context of Rust, FFI is most commonly used to interoperate with C libraries. This is because C has a well-defined Application Binary Interface (ABI), which makes it a common denominator for interoperability between many languages.</p>
+<h4 id="why-is-ffi-a-big-deal">Why is FFI a Big Deal?<a class="zola-anchor" href="#why-is-ffi-a-big-deal" aria-label="Anchor link for: why-is-ffi-a-big-deal" style="visibility: hidden;"></a>
+</h4>
+<p>Rust's FFI opens up a world of possibilities:</p>
+<ul>
+<li><strong>Leveraging Existing Ecosystems:</strong> You don't have to reinvent the wheel. There are countless high-quality and battle-tested libraries written in C. With FFI, you can use them directly in your Rust projects.</li>
+<li><strong>Performance-Critical Code:</strong> While Rust is already incredibly fast, you might have a legacy C library that's highly optimized for a specific task. FFI allows you to call that library from your Rust code, getting the best of both worlds.</li>
+<li><strong>Gradual Modernization:</strong> FFI is perfect for gradually migrating a legacy codebase to Rust. You can start by rewriting small parts of your application in Rust and use FFI to bridge the old and new code.</li>
+</ul>
+<h2 id="a-hello-world-example">A "Hello, World!" Example<a class="zola-anchor" href="#a-hello-world-example" aria-label="Anchor link for: a-hello-world-example" style="visibility: hidden;"></a>
+</h2>
+<p>My "hello world" code is available in its entirety on <a rel="nofollow noreferrer external" href="https://github.com/braincow/rust_ffi_helloworld">GitHub</a>. While FFI interface in my understanding could also provide bi-directional function calls e.g. C-code could call a Rust function, in this excersise we only implement exposed C-functions to Rust code.</p>
+<h3 id="a-c-library">A C-library<a class="zola-anchor" href="#a-c-library" aria-label="Anchor link for: a-c-library" style="visibility: hidden;"></a>
+</h3>
+<p>First, we need a simple C-library and a function that the C-library will expose.</p>
+<p>In <code>src/hello.h</code> we define a simple C-function called "hello":</p>
+<pre class="giallo z-code"><code data-lang="c"><span class="giallo-l"><span class="z-keyword">#</span><span class="z-keyword">include</span><span class="z-punctuation z-definition z-string"> &lt;</span><span class="z-string">stddef.h</span><span class="z-punctuation z-definition z-string">&gt;</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> For size_t</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">//</span><span class="z-comment"> Writes a greeting into the provided buffer.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">//</span><span class="z-comment"> Returns the number of bytes written (excluding the null terminator), or -1 on error.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">int</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-storage">const</span><span class="z-storage z-type"> char</span><span class="z-keyword"> *</span><span class="z-variable">name</span><span>,</span><span class="z-storage z-type"> char</span><span class="z-keyword"> *</span><span class="z-variable">out_buffer</span><span>,</span><span class="z-storage z-type"> size_t</span><span class="z-variable"> buffer_len</span><span>)</span><span>;</span></span></code></pre>
+<p>And in <code>src/hello.c</code> we implement the "hello" function itself:</p>
+<pre class="giallo z-code"><code data-lang="c"><span class="giallo-l"><span class="z-keyword">#</span><span class="z-keyword">include</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">hello.h</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> Include our header file</span></span>
+<span class="giallo-l"><span class="z-keyword">#</span><span class="z-keyword">include</span><span class="z-punctuation z-definition z-string"> &lt;</span><span class="z-string">stdio.h</span><span class="z-punctuation z-definition z-string">&gt;</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> For snprintf</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-storage z-type">int</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-storage">const</span><span class="z-storage z-type"> char</span><span class="z-keyword"> *</span><span class="z-variable">name</span><span>,</span><span class="z-storage z-type"> char</span><span class="z-keyword"> *</span><span class="z-variable">out_buffer</span><span>,</span><span class="z-storage z-type"> size_t</span><span class="z-variable"> buffer_len</span><span>)</span></span>
+<span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> Use &quot;World&quot; as a default if the provided name is NULL or empty.</span></span>
+<span class="giallo-l"><span class="z-storage">    const</span><span class="z-storage z-type"> char</span><span class="z-keyword"> *</span><span>effective_name </span><span class="z-keyword">=</span><span> (</span><span>name </span><span class="z-keyword">!=</span><span class="z-constant"> NULL</span><span class="z-keyword"> &amp;&amp;</span><span class="z-variable"> name</span><span>[</span><span class="z-constant">0</span><span>]</span><span class="z-keyword"> !=</span><span class="z-punctuation z-definition z-string"> &#39;</span><span class="z-constant">\0</span><span class="z-punctuation z-definition z-string">&#39;</span><span>)</span><span class="z-keyword"> ?</span><span> name </span><span class="z-keyword">:</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">World</span><span class="z-punctuation z-definition z-string">&quot;</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-storage z-type">    int</span><span> written </span><span class="z-keyword">=</span><span class="z-entity z-name"> snprintf</span><span>(</span><span>out_buffer</span><span>,</span><span> buffer_len</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">Hello, </span><span class="z-constant">%s</span><span class="z-constant">\n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>,</span><span> effective_name</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-keyword">    if</span><span> (</span><span>written </span><span class="z-keyword">&lt;</span><span class="z-constant"> 0</span><span class="z-keyword"> ||</span><span> (</span><span class="z-storage z-type">size_t</span><span>)</span><span>written </span><span class="z-keyword">&gt;=</span><span> buffer_len</span><span>)</span></span>
+<span class="giallo-l"><span>    {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> An error occurred or the buffer was too small.</span></span>
+<span class="giallo-l"><span class="z-keyword">        return</span><span class="z-keyword"> -</span><span class="z-constant">1</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-keyword">    return</span><span> written</span><span>;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This function takes in a pointers for name and buffer to modify. Then with <code>sprintf</code> we construct a string "Hello Name" and push that into the buffer after which function returns with the number of bytes written, or -1 in case of an error. Pretty standard thread safe C-code stuff I think.</p>
+<h3 id="rust-sys-crate">Rust "sys" crate<a class="zola-anchor" href="#rust-sys-crate" aria-label="Anchor link for: rust-sys-crate" style="visibility: hidden;"></a>
+</h3>
+<p>In Rust we usually have a crate with suffix <code>-sys</code> that implements the FFI interface to C-code via bindings, in this case <code>hello-sys</code>. These bindings can be manually created I guess, but Rust also provides a <code>bindgen</code> crate that can automate this process.</p>
+<p>To simplify proceedings a bit I created a <code>wrapper.h</code> header file that <code>#include</code>s the <code>hello.h</code> header file. In real life projects this would be the place where you would include all the other headers you need. I guess depending on your use case you could use many other paradigms here, but this seems to be somewhat "standard" way of managing the inclusion of C-functions.</p>
+<p>Then on <code>hello-sys/build.rs</code> file we tell to the Cargo buildtool how to generate the bindings via <code>bindgen</code> crate:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-keyword">fn</span><span class="z-entity z-name"> main</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> --- Part 1: Define Header and Include Paths ---</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> The path to the source repository</span></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> hello_source_path</span><span class="z-keyword"> =</span><span class="z-entity z-name"> PathBuf</span><span class="z-keyword">::</span><span class="z-entity z-name">from</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">../src</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> Adjust this path if needed</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> hello_c_file</span><span class="z-keyword"> =</span><span class="z-variable z-other"> hello_source_path</span><span class="z-keyword">.</span><span class="z-entity z-name">join</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">hello.c</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> wrapper_h_file</span><span class="z-keyword"> =</span><span class="z-entity z-name"> PathBuf</span><span class="z-keyword">::</span><span class="z-entity z-name">from</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">wrapper.h</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> hello_h_file</span><span class="z-keyword"> =</span><span class="z-variable z-other"> hello_source_path</span><span class="z-keyword">.</span><span class="z-entity z-name">join</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">hello.h</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-entity z-name">    println!</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">cargo:rerun-if-changed=</span><span class="z-string">{</span><span class="z-string">}</span><span class="z-punctuation z-definition z-string">&quot;</span><span>,</span><span class="z-variable z-other"> wrapper_h_file</span><span class="z-keyword">.</span><span class="z-entity z-name">display</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">    println!</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">cargo:rerun-if-changed=</span><span class="z-string">{</span><span class="z-string">}</span><span class="z-punctuation z-definition z-string">&quot;</span><span>,</span><span class="z-variable z-other"> hello_c_file</span><span class="z-keyword">.</span><span class="z-entity z-name">display</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">    println!</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">cargo:rerun-if-changed=</span><span class="z-string">{</span><span class="z-string">}</span><span class="z-punctuation z-definition z-string">&quot;</span><span>,</span><span class="z-variable z-other"> hello_h_file</span><span class="z-keyword">.</span><span class="z-entity z-name">display</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> --- Compile C code ---</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> This will compile hello.c and create a static library (e.g., libhello_c_lib.a)</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> The name &quot;hello_c_lib&quot; is arbitrary but should be consistent.</span></span>
+<span class="giallo-l"><span class="z-entity z-name">    cc</span><span class="z-keyword">::</span><span class="z-entity z-name">Build</span><span class="z-keyword">::</span><span class="z-entity z-name">new</span><span>(</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">file</span><span>(</span><span class="z-keyword">&amp;</span><span class="z-variable z-other">hello_c_file</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">include</span><span>(</span><span class="z-keyword">&amp;</span><span class="z-variable z-other">hello_source_path</span><span>)</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> So hello.c can find hello.h if it needs to, and for bindgen&#39;s include context</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">compile</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">hello_c_lib</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> --- Part 2: Configure bindgen ---</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> bindings</span><span class="z-keyword"> =</span><span class="z-entity z-name"> bindgen</span><span class="z-keyword">::</span><span class="z-entity z-name">Builder</span><span class="z-keyword">::</span><span class="z-entity z-name">default</span><span>(</span><span>)</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> The header file we want to generate bindings for.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> We use a &quot;wrapper&quot; header for better control.</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">header</span><span>(</span><span class="z-variable z-other">wrapper_h_file</span><span class="z-keyword">.</span><span class="z-entity z-name">to_str</span><span>(</span><span>)</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>)</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Tell cargo to invalidate the built crate whenever any of the</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> included header files changed.</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">parse_callbacks</span><span>(</span><span class="z-entity z-name">Box</span><span class="z-keyword">::</span><span class="z-entity z-name">new</span><span>(</span><span class="z-entity z-name">bindgen</span><span class="z-keyword">::</span><span class="z-entity z-name">CargoCallbacks</span><span class="z-keyword">::</span><span class="z-entity z-name">new</span><span>(</span><span>)</span><span>)</span><span>)</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Add the necessary include paths for hello&#39;s internal headers.</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">clang_arg</span><span>(</span><span class="z-entity z-name">format!</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">-I</span><span class="z-string">{</span><span class="z-string">}</span><span class="z-punctuation z-definition z-string">&quot;</span><span>,</span><span class="z-variable z-other"> hello_source_path</span><span class="z-keyword">.</span><span class="z-entity z-name">display</span><span>(</span><span>)</span><span>)</span><span>)</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> To find hello.h from wrapper.h</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> --- Part 3: Filter What to Generate (IMPORTANT) ---</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> By default, bindgen generates everything. hello headers include tons of</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> system headers. We should only allowlist the functions/types we need.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> This makes the generated code smaller and compilation faster.</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">allowlist_function</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">hello</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Generate the bindings.</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">generate</span><span>(</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">expect</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">Unable to generate bindings</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> --- Part 4: Write the bindings to a file ---</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> Get the path to cargo&#39;s output directory.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> out_path</span><span class="z-keyword"> =</span><span class="z-entity z-name"> PathBuf</span><span class="z-keyword">::</span><span class="z-entity z-name">from</span><span>(</span><span class="z-entity z-name">env</span><span class="z-keyword">::</span><span class="z-entity z-name">var</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">OUT_DIR</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> Write the bindings to the $OUT_DIR/bindings.rs file.</span></span>
+<span class="giallo-l"><span class="z-variable z-other">    bindings</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">write_to_file</span><span>(</span><span class="z-variable z-other">out_path</span><span class="z-keyword">.</span><span class="z-entity z-name">join</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">bindings.rs</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">expect</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">Couldn&#39;t write bindings!</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> --- Part 5: Link the compiled C library ---</span></span>
+<span class="giallo-l"><span class="z-entity z-name">    println!</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">cargo:rustc-link-lib=static=hello_c_lib</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span><span class="z-punctuation z-definition z-comment"> //</span><span class="z-comment"> Link the library we just compiled</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Lots of things to unpack here, but most importantly:</p>
+<ol>
+<li>It compile the <code>hello.c</code> and its function as <code>hello_c_lib</code> artifact via <code>cc</code> crate.</li>
+<li>We generate the bindings for our C-library and with <code>.allowlist_function()</code> define that we wish to only include <code>hello</code> function instead of potentially everything present in the headers. This is somewhat redundant as we only have a single function defined in the <code>hello.h</code> header, but in real life you might want to limit the bindings generated to a just a subset of C-functions for example.</li>
+<li>Annotate cargo build process with <code>cargo:rustc-link-lib=static=hello_c_lib</code> so that rustc will link the <code>hello_c_lib</code> artifact to the resulting Rust binary.</li>
+<li>Also we annotate Cargo build process to rebuild the code if contents of <code>.c</code> or <code>.h</code> files change.</li>
+</ol>
+<p>To incorporate the generated bindings to our Rust crate we, as a final step, need to include the generated code as part of our library.</p>
+<p><code>hello-sys/src/lib.rs</code> therefore contains:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-punctuation z-definition z-comment">//</span><span class="z-comment"> This brings the generated FFI declarations into our crate.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">//</span><span class="z-comment"> The code will be located at $OUT_DIR/bindings.rs</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">//</span><span class="z-comment"> We must disable some lints that are commonly triggered by C code.</span></span>
+<span class="giallo-l"><span>#</span><span>!</span><span>[</span><span>allow</span><span>(</span><span>non_upper_case_globals</span><span>)</span><span>]</span></span>
+<span class="giallo-l"><span>#</span><span>!</span><span>[</span><span>allow</span><span>(</span><span>non_camel_case_types</span><span>)</span><span>]</span></span>
+<span class="giallo-l"><span>#</span><span>!</span><span>[</span><span>allow</span><span>(</span><span>non_snake_case</span><span>)</span><span>]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-entity z-name">include!</span><span>(</span><span class="z-entity z-name">concat!</span><span>(</span><span class="z-entity z-name">env!</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">OUT_DIR</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">/bindings.rs</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>)</span><span>;</span></span></code></pre>
+<p>Now when the <code>hello-sys</code> crate is built it will contain very unsafe, generated, code and includes the compiled C-library that does not bring any benefits of Rust to the table yet. This is handled by creating a safer library crate as an interface between the developer, sys crate and C-code.</p>
+<h3 id="rust-crate">Rust crate<a class="zola-anchor" href="#rust-crate" aria-label="Anchor link for: rust-crate" style="visibility: hidden;"></a>
+</h3>
+<p>Naming convention aside this crate now uses the <code>hello-sys</code> crate created earlier to implement via <code>unsafe {}</code> code user friendly function implementations towards our C-code. So instead of using the <code>bindgen</code> generated functions the developer uses more "safe" and vetted code from this <code>hello-rs</code> crate instead.</p>
+<p>In <code>hello-rs/src/lib.rs</code>:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-keyword">pub</span><span class="z-keyword"> fn</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-variable z-other">name</span><span class="z-keyword">:</span><span class="z-entity z-name"> Option</span><span>&lt;</span><span class="z-keyword">&amp;</span><span class="z-entity z-name">str</span><span>&gt;</span><span>)</span><span class="z-keyword"> -&gt;</span><span class="z-entity z-name"> Result</span><span>&lt;</span><span class="z-entity z-name">String</span><span>&gt;</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> Convert the optional Rust &amp;str to an optional C-compatible null-terminated string.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> This will be `Some(CString)` if a name is provided, or `None` if the input is `None`.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> `transpose()` converts `Option&lt;Result&lt;T, E&gt;&gt;` to `Result&lt;Option&lt;T&gt;, E&gt;`.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> c_name_opt</span><span class="z-keyword">:</span><span class="z-entity z-name"> Option</span><span>&lt;</span><span class="z-entity z-name">CString</span><span>&gt;</span><span class="z-keyword"> =</span><span class="z-variable z-other"> name</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">map</span><span>(</span><span class="z-entity z-name">CString</span><span class="z-keyword">::</span><span class="z-variable z-other">new</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">transpose</span><span>(</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">        .</span><span class="z-entity z-name">context</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">CString::new failed due to interior null byte on parameter &#39;name&#39;</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span class="z-keyword">?</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> Get a pointer to the C string, or a null pointer if `name` was `None`.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> The C function is designed to handle a null pointer gracefully.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-variable z-other"> name_ptr</span><span class="z-keyword"> =</span><span class="z-keyword"> match</span><span class="z-keyword"> &amp;</span><span class="z-variable z-other">c_name_opt</span><span> {</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        Some</span><span>(</span><span class="z-variable z-other">s</span><span>)</span><span class="z-keyword"> =&gt;</span><span class="z-variable z-other"> s</span><span class="z-keyword">.</span><span class="z-entity z-name">as_ptr</span><span>(</span><span>)</span><span>,</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        None</span><span class="z-keyword"> =&gt;</span><span class="z-entity z-name"> std</span><span class="z-keyword">::</span><span class="z-entity z-name">ptr</span><span class="z-keyword">::</span><span class="z-entity z-name">null</span><span>(</span><span>)</span><span>,</span></span>
+<span class="giallo-l"><span>    }</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> Create a buffer for the C function to write into.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> We are responsible for allocating memory that the C code can use.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">    let</span><span class="z-storage"> mut</span><span class="z-variable z-other"> buffer</span><span class="z-keyword">:</span><span class="z-entity z-name"> Vec</span><span>&lt;</span><span class="z-entity z-name">u8</span><span>&gt;</span><span class="z-keyword"> =</span><span class="z-entity z-name"> vec!</span><span>[</span><span class="z-constant">0</span><span>;</span><span class="z-constant"> 300</span><span>]</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> Call the FFI function. The `unsafe` block is necessary because we are calling C code,</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> passing raw pointers, and trusting it to write safely into our buffer.</span></span>
+<span class="giallo-l"><span class="z-keyword">    unsafe</span><span> {</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> written</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello_sys</span><span class="z-keyword">::</span><span class="z-entity z-name">hello</span><span>(</span><span class="z-variable z-other">name_ptr</span><span>,</span><span class="z-variable z-other"> buffer</span><span class="z-keyword">.</span><span class="z-entity z-name">as_mut_ptr</span><span>(</span><span>)</span><span class="z-keyword"> as</span><span class="z-keyword"> *</span><span class="z-storage">mut</span><span class="z-variable z-other"> c_char</span><span>,</span><span class="z-variable z-other"> buffer</span><span class="z-keyword">.</span><span class="z-entity z-name">len</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-keyword">        if</span><span class="z-variable z-other"> written</span><span class="z-keyword"> &lt;</span><span class="z-constant"> 0</span><span> {</span></span>
+<span class="giallo-l"><span class="z-keyword">            return</span><span class="z-entity z-name"> Err</span><span>(</span><span class="z-entity z-name">anyhow!</span><span>(</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-string">                &quot;</span><span class="z-string">C function &#39;hello&#39; failed: the output buffer was too small.</span><span class="z-punctuation z-definition z-string">&quot;</span></span>
+<span class="giallo-l"><span>            )</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> `written` is the number of bytes written (excluding the null terminator).</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> result_slice</span><span class="z-keyword"> =</span><span class="z-keyword"> &amp;</span><span class="z-variable z-other">buffer</span><span>[</span><span class="z-keyword">..</span><span class="z-variable z-other">written</span><span class="z-keyword"> as</span><span class="z-entity z-name"> usize</span><span>]</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        String</span><span class="z-keyword">::</span><span class="z-entity z-name">from_utf8</span><span>(</span><span class="z-variable z-other">result_slice</span><span class="z-keyword">.</span><span class="z-entity z-name">to_vec</span><span>(</span><span>)</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">            .</span><span class="z-entity z-name">context</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">Failed to convert C output to UTF-8 string</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>As we can see we still need to use <code>unsafe {}</code> code, but regardless of what you might have read in the Internet its <em>not</em> wrong to use <code>unsafe</code> in Rust when you do it right. Hell, the Rusts standard library uses a lots of unsafe code. Most importantly in cases like this there is no way around it without fully re-implementing the C-library functionality in Rust natively, which misses the point of this excersise altogether. Real life is ugly and sometimes you just need to be reasonably unsafe.</p>
+<p>So, if we are unsafe how can we mitigate the risks then? As we can see from the code snippet above I have created a Rust function <code>hello</code> that uses the sys crate provided unsafe <code>hello</code> function, but wraps it with sanity checks and transforms between C datatypes and native Rust datatypes while maintaining interoperability with the C-library functionality as much as possible. This way any potential documentation written for the C-code that describes parameters and function behavior stay the same across C and Rust implementations.</p>
+<p>In the end when we make the calls to C-library via the unsafe code we should be doing things in a sane way, but how can we make sure that our assumptions are correct about "safeness"? Well, lets add some test cases of course:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span>#</span><span>[</span><span>cfg</span><span>(</span><span>test</span><span>)</span><span>]</span></span>
+<span class="giallo-l"><span class="z-storage z-type">mod</span><span class="z-entity z-name"> tests</span><span> {</span></span>
+<span class="giallo-l"><span class="z-keyword">    use</span><span class="z-variable z-language"> super</span><span class="z-keyword">::</span><span class="z-keyword">*</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> say_hello</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> msg</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">Rust</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Assert that the call was successful</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">is_ok</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Assert that the output is what we expect</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert_eq!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">Hello, Rust</span><span class="z-constant">\</span><span class="z-constant">n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> say_hello_to_world_on_empty_name</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> The C function treats an empty string as a case to default to &quot;World&quot;.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> msg</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">is_ok</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Assert that an empty name defaults to &quot;World&quot;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert_eq!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">Hello, World</span><span class="z-constant">\</span><span class="z-constant">n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> say_hello_to_world_on_none_name</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Our Rust wrapper now passes NULL for None, and the C code defaults to &quot;World&quot;.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> msg</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">None</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">is_ok</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert_eq!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">Hello, World</span><span class="z-constant">\</span><span class="z-constant">n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> check_internal_null_byte_error</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> C strings are null-terminated, so they cannot contain null bytes internally.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> CString::new will return an error if this is attempted.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> msg</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">Ru</span><span class="z-constant">\</span><span class="z-constant">0</span><span class="z-string">st</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">is_err</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap_err</span><span>(</span><span>)</span><span class="z-keyword">.</span><span class="z-entity z-name">to_string</span><span>(</span><span>)</span><span class="z-keyword">.</span><span class="z-entity z-name">contains</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">interior null byte</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> succeeds_when_output_fits_exactly</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> The internal buffer in `hello` is 300 bytes.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> The output format is &quot;Hello, %s\n&quot;.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> &quot;Hello, &quot; is 7 bytes.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> &quot;\n&quot; is 1 byte.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> The null terminator is 1 byte.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> Total overhead is 9 bytes.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> A name of (300 - 9) = 291 bytes will result in a 299-byte string,</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> which fits perfectly into the 300-byte buffer with its null terminator.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> long_name</span><span class="z-keyword"> =</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">a</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-keyword">.</span><span class="z-entity z-name">repeat</span><span>(</span><span class="z-constant">291</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> result</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-keyword">&amp;</span><span class="z-variable z-other">long_name</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">result</span><span class="z-keyword">.</span><span class="z-entity z-name">is_ok</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> expected</span><span class="z-keyword"> =</span><span class="z-entity z-name"> format!</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">Hello, </span><span class="z-string">{</span><span class="z-string">}</span><span class="z-constant">\</span><span class="z-constant">n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>,</span><span class="z-variable z-other"> long_name</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert_eq!</span><span>(</span><span class="z-variable z-other">result</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>,</span><span class="z-variable z-other"> expected</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> fails_when_output_buffer_is_too_small</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> A name of 292 bytes will cause the C function to report an error because</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> the total output (7 + 292 + 1 = 300 bytes) plus the null terminator</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> requires a 301-byte buffer, but ours is 300.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> long_name</span><span class="z-keyword"> =</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">a</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-keyword">.</span><span class="z-entity z-name">repeat</span><span>(</span><span class="z-constant">292</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> result</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-keyword">&amp;</span><span class="z-variable z-other">long_name</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">result</span><span class="z-keyword">.</span><span class="z-entity z-name">is_err</span><span>(</span><span>)</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">Expected an error, but got Ok</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span></span>
+<span class="giallo-l"><span class="z-variable z-other">            result</span></span>
+<span class="giallo-l"><span class="z-keyword">                .</span><span class="z-entity z-name">unwrap_err</span><span>(</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">                .</span><span class="z-entity z-name">to_string</span><span>(</span><span>)</span></span>
+<span class="giallo-l"><span class="z-keyword">                .</span><span class="z-entity z-name">contains</span><span>(</span><span class="z-punctuation z-definition z-string">&quot;</span><span class="z-string">output buffer was too small</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>        )</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> handles_multibyte_utf8_characters_correctly</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> &quot;😊&quot; is a 4-byte UTF-8 character. This test ensures that byte lengths,</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> not character counts, are handled correctly across the FFI boundary.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> name</span><span class="z-keyword"> =</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">😊</span><span class="z-punctuation z-definition z-string">&quot;</span><span>;</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> msg</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-variable z-other">name</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">is_ok</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert_eq!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">Hello, 😊</span><span class="z-constant">\</span><span class="z-constant">n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    #</span><span>[</span><span>test</span><span>]</span></span>
+<span class="giallo-l"><span class="z-keyword">    fn</span><span class="z-entity z-name"> handles_input_with_c_format_specifiers</span><span>(</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> This is a defensive test. The C code uses `snprintf(&quot;...&quot;, name)`, which is safe.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> An unsafe implementation might do `snprintf(name, ...)` with a user-controlled</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> string, which would be a format string vulnerability. This test confirms</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> our implementation is not vulnerable and treats specifiers as literals.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> name</span><span class="z-keyword"> =</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">user %s%s%n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>;</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> msg</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-variable z-other">name</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">is_ok</span><span>(</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span class="z-entity z-name">        assert_eq!</span><span>(</span><span class="z-variable z-other">msg</span><span class="z-keyword">.</span><span class="z-entity z-name">unwrap</span><span>(</span><span>)</span><span>,</span><span class="z-punctuation z-definition z-string"> &quot;</span><span class="z-string">Hello, user %s%s%n</span><span class="z-constant">\</span><span class="z-constant">n</span><span class="z-punctuation z-definition z-string">&quot;</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>There is approximately 2x more test code than actual implementation code for the Rust <code>hello</code> function. Writing <code>unsafe</code> code is only unsafe if you dont know what your code is doing or you dont care enough to validate your assumptions. But since we can only write test cases for situations that we are aware of no test suite is never perfect and this is how we get the blue screens, core dumps and sad Macs from time to time. When this happens fixes are applied and test cases written to cover that error state and to safeguard against future regressions.</p>
+<h2 id="bonus-fuzzing">Bonus: Fuzzing<a class="zola-anchor" href="#bonus-fuzzing" aria-label="Anchor link for: bonus-fuzzing" style="visibility: hidden;"></a>
+</h2>
+<p>To over simplify what fuzzing is to say that its a technique of sequentially feeding garbage to a datastructure that is processed in someway or another in hopes of getting a crash and then analyzing the error state, creating a fix and test case for it.</p>
+<p>Since we can write test cases for inputs and outputs we know of at time of writing your code our test suites are only as good as our imaginations or guidelines are, but it does not hurt to double check. So, in addition to creating comprehensive test suite in Rust I also added fuzzing support for the <code>hello-rs</code> crate.</p>
+<p><code>hello-rs/fuzz/fuzz_targets/fuzz_hello.rs</code> implements a fuzzing target for our <code>hello</code> Rust function:</p>
+<pre class="giallo z-code"><code data-lang="rust"><span class="giallo-l"><span class="z-entity z-name">fuzz_target!</span><span>(</span><span class="z-keyword">|</span><span class="z-variable z-other">data</span><span class="z-keyword">:</span><span class="z-keyword"> &amp;</span><span>[</span><span class="z-entity z-name">u8</span><span>]</span><span class="z-keyword">|</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> The fuzzer provides raw bytes. Our function&#39;s public API expects a `&amp;str`,</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> which must be valid UTF-8.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> We&#39;ll try to convert the bytes to a UTF-8 string. If it&#39;s not</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> valid UTF-8, we simply skip this input, as it falls outside the</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">    //</span><span class="z-comment"> function&#39;s contract. The fuzzer will quickly generate another input.</span></span>
+<span class="giallo-l"><span class="z-keyword">    if</span><span class="z-storage z-type"> let</span><span class="z-entity z-name"> Ok</span><span>(</span><span class="z-variable z-other">s</span><span>)</span><span class="z-keyword"> =</span><span class="z-entity z-name"> std</span><span class="z-keyword">::</span><span class="z-entity z-name">str</span><span class="z-keyword">::</span><span class="z-entity z-name">from_utf8</span><span>(</span><span class="z-variable z-other">data</span><span>)</span><span> {</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> We call the function with the fuzzer-generated string.</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> We don&#39;t need to check the result (Ok or Err). The goal of the</span></span>
+<span class="giallo-l"><span class="z-punctuation z-definition z-comment">        //</span><span class="z-comment"> fuzzer is to find inputs that cause a panic, crash, or hang.</span></span>
+<span class="giallo-l"><span class="z-storage z-type">        let</span><span class="z-variable z-other"> _</span><span class="z-keyword"> =</span><span class="z-entity z-name"> hello</span><span>(</span><span class="z-entity z-name">Some</span><span>(</span><span class="z-variable z-other">s</span><span>)</span><span>)</span><span>;</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span><span>)</span><span>;</span></span></code></pre>
+<p>This simple fuzzer <em>should</em>, to my understanding, catch a situation where some user input to the Rust <code>hello</code> function that calls <code>hello</code> in the sys crate that binds to C-library function called <code>hello</code> causes a panic or a crash we become aware of it. I left the implementation running for few days and was unable to get a crash out of my code; I guess its relative good then or my fuzzing target is just broken or I got lucky with the generated data not triggering an error.</p>
+<h2 id="conclusion">Conclusion<a class="zola-anchor" href="#conclusion" aria-label="Anchor link for: conclusion" style="visibility: hidden;"></a>
+</h2>
+<p>I think I now understand the FFI interface on a superficial level and can create a more complex real life example next or at the very least am able to debug existing crates a little better. Also I need to check if I can use this approach in emdedded development too; I have camera module that I would like to use from Raspberry Pi Pico W, but they only provide C-library for interfacing with the module and so far manually initializing and using it from <code>embassy-rs</code> environment has been a tricky proposition.</p>
+<p>Fun times were had, new things learned, so a win-win.</p>
+
+      </article>
+
+      
+      
+
+      
+      
+    </div>
+
+    
+
+
+<footer>
+  <div class="left">
+    <div class="copyright">
+      © 2025 Antti Peltonen
+      
+      <span>|</span>
+      Built with <a href="https://www.getzola.org" rel="noreferrer" target="_blank">zola</a> and <a href="https://github.com/isunjn/serene" rel="noreferrer" target="_blank">serene</a>
+      
+    </div>
+  </div>
+
+  <div class="right">
+    
+    
+      
+    
+    
+    <a id="rss-btn" href="https://www.bcow.me/posts/atom.xml">RSS</a>
+    
+    
+
+    
+    
+    
+    <button id="theme-toggle" aria-label="theme switch">
+      <span class="moon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27098 10 5.04157 10 7ZM4 12C4 16.4183 7.58172 20 12 20C15.0583 20 17.7158 18.2839 19.062 15.7621C18.3945 15.9187 17.7035 16 17 16C12.0294 16 8 11.9706 8 7C8 6.29648 8.08133 5.60547 8.2379 4.938C5.71611 6.28423 4 8.9417 4 12Z" fill="currentColor"></path></svg>
+</span>
+      <span class="sun-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z" fill="currentColor"></path></svg>
+</span>
+    </button>
+    
+  </div>
+</footer>
+
+
+
+
+<dialog id="rss-mask">
+  <div>
+    <a href="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml">https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml</a>
+    
+    
+    <button autofocus aria-label="copy" data-link="https:&#x2F;&#x2F;www.bcow.me&#x2F;posts&#x2F;atom.xml" data-copy-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" data-check-icon="&lt;svg xmlns=&quot;http:&#x2F;&#x2F;www.w3.org&#x2F;2000&#x2F;svg&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;18&quot; height=&quot;18&quot;&gt;&lt;path d=&quot;M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z&quot; fill=&quot;currentColor&quot;&gt;&lt;&#x2F;path&gt;&lt;&#x2F;svg&gt;
+" >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"><path d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z" fill="currentColor"></path></svg>
+
+    </button>
+  </div>
+</dialog>
+
+
+
+  </main>
+</div>
+
+  
+<script src="/js/lightense.min.js"></script>
+
+
+  <script src="https://www.bcow.me/js/main.js"></script>
+</body>
+
+</html>
